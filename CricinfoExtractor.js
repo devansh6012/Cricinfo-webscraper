@@ -23,15 +23,21 @@ responseKaPromise.then(function(response){
     let document = dom.window.document;
 
     let matches = [];
-    let matchInfoDivs = document.querySelectorAll("div.match-score-block");
-    for(let i = 0; i < matchInfoDivs.length; i++){
+    let matchdivs = document.querySelectorAll("div.match-score-block");
+    for(let i = 0; i < matchdivs.length; i++){
+        let matchdiv = matchdivs[i];
         let match = {
+            t1: "",
+            t2: "",
+            t1s: "",
+            t2s: "",
+            result: ""
         };
-        let namePs = matchInfoDivs[i].querySelectorAll("p.name");
-        match.t1 = namePs[0].textContent;
-        match.t2 = namePs[1].textContent;
+        let teamParas = matchdiv.querySelectorAll("div.name-detail > p.name");
+        match.t1 = teamParas[0].textContent;
+        match.t2 = teamParas[1].textContent;
 
-        let scoreSpans = matchInfoDivs[i].querySelectorAll("div.score-detail > span.score");
+        let scoreSpans = matchdiv.querySelectorAll("div.score-detail > span.score");
 
         if(scoreSpans.length == 2){
             match.t1s = scoreSpans[0].textContent;
@@ -44,7 +50,7 @@ responseKaPromise.then(function(response){
             match.t2s = "";
         }
 
-        let spanResult = matchInfoDivs[i].querySelector("div.status-text > span");
+        let spanResult = matchdiv.querySelector("div.status-text > span");
         match.result = spanResult.textContent;
 
         matches.push(match);
@@ -68,8 +74,6 @@ responseKaPromise.then(function(response){
     createExcelFile(teams);
     createFolders(teams);
 
-}).catch(function(err){
-    console.log(err);
 })
 
 function createFolders(teams){
@@ -138,19 +142,18 @@ function createScoreCard(teamName, match, matchFileName){
 function createExcelFile(teams) {
     let wb = new excel.Workbook();
 
-    for(let i = 0; i < teams.length; i++){
+    for (let i = 0; i < teams.length; i++) {
         let sheet = wb.addWorksheet(teams[i].name);
-    
-        sheet.cell(2, 1).string("Opponent");
-        sheet.cell(2, 2).string("Self Score");
-        sheet.cell(2, 3).string("Opponent Score");
-        sheet.cell(2, 4).string("Result");
-    
-        for(j = 0; j < teams[i].matches.length; j++){    
-            sheet.cell(j + 3, 1).string(teams[i].matches[j].vs);
-            sheet.cell(j + 3, 2).string(teams[i].matches[j].selfScore);
-            sheet.cell(j + 3, 3).string(teams[i].matches[j].oppScore);
-            sheet.cell(j + 3, 4).string(teams[i].matches[j].result);
+
+        sheet.cell(1, 1).string("VS");
+        sheet.cell(1, 2).string("Self Score");
+        sheet.cell(1, 3).string("Opp Score");
+        sheet.cell(1, 4).string("Result");
+        for (let j = 0; j < teams[i].matches.length; j++) {
+            sheet.cell(2 + j, 1).string(teams[i].matches[j].vs);
+            sheet.cell(2 + j, 2).string(teams[i].matches[j].selfScore);
+            sheet.cell(2 + j, 3).string(teams[i].matches[j].oppScore);
+            sheet.cell(2 + j, 4).string(teams[i].matches[j].result);
         }
     }
     wb.write(args.excel);
@@ -166,11 +169,10 @@ function putTeamsInTeamsArrayIfMissing(teams, match) {
     }
 
     if(t1idx == -1){
-        let team = {
+        teams.push({
             name: match.t1,
             matches: []
-        };
-        teams.push(team);
+        });
     }
 
     let t2idx = -1;
@@ -182,11 +184,10 @@ function putTeamsInTeamsArrayIfMissing(teams, match) {
     }
 
     if(t2idx == -1){
-        let team = {
+        teams.push({
             name: match.t2,
             matches: []
-        };
-        teams.push(team);
+        });
     }
 
 }
@@ -216,7 +217,7 @@ function putMatchInAppropriteTeam(teams, match) {
         }
     }
     let team2 = teams[t2idx]
-    team1.matches.push({
+    team2.matches.push({
         vs: match.t1,
         selfScore: match.t2s,
         oppScore: match.t1s,
